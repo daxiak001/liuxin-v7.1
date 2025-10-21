@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * L0 MCP HTTP Server
- * 云端版本 - 提供HTTP API让所有电脑通过网络访问L0查询
+ * 柳芯MCP完整版HTTP服务器 v7.1
+ * ✅ 完整功能版本（非轻量级）
+ * ✅ 包含4层违规防护系统
+ * ✅ 实时AI行为监控与拦截
  */
 
 const express = require('express');
@@ -32,22 +34,289 @@ const db = new sqlite3.Database('./liuxin.db');
 // API端点
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔒 4层违规防护系统
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 第3层：强制确认状态管理
+class ConfirmationManager {
+    constructor() {
+        this.confirmationRequired = false;
+        this.confirmationReceived = false;
+        this.pendingRequest = null;
+        this.violationCount = 0;
+    }
+    
+    checkRequest(userMessage) {
+        const triggerKeywords = [
+            '分析', '查看', '找一下', '检查', '搜索',
+            '开发', '修改', '创建', '删除', '执行',
+            '帮我', '需要', '要求', '实现',
+            '升级', '修复', '解决', '处理'
+        ];
+        
+        const requiresConfirmation = triggerKeywords.some(keyword => 
+            userMessage.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        if (requiresConfirmation) {
+            this.confirmationRequired = true;
+            this.confirmationReceived = false;
+            this.pendingRequest = userMessage;
+            return true;
+        }
+        
+        return false;
+    }
+    
+    receiveConfirmation(userResponse) {
+        const confirmationKeywords = ['正确', '对的', '是', '继续', '执行', '是的'];
+        if (confirmationKeywords.some(kw => userResponse.includes(kw))) {
+            this.confirmationReceived = true;
+            return true;
+        }
+        return false;
+    }
+    
+    isConfirmed() {
+        return !this.confirmationRequired || this.confirmationReceived;
+    }
+    
+    reset() {
+        this.confirmationRequired = false;
+        this.confirmationReceived = false;
+        this.pendingRequest = null;
+    }
+    
+    recordViolation() {
+        this.violationCount++;
+        return this.violationCount;
+    }
+}
+
+// 第4层：违规惩罚机制
+class ViolationPunishmentSystem {
+    constructor() {
+        this.suspendedTools = new Set();
+        this.violationHistory = [];
+        this.suspensionTimers = new Map();
+    }
+    
+    handleViolation(violationType, toolName) {
+        const violation = {
+            type: violationType,
+            tool: toolName,
+            timestamp: new Date().toISOString(),
+            severity: this.calculateSeverity(violationType)
+        };
+        
+        this.violationHistory.push(violation);
+        
+        // 根据违规类型和历史决定惩罚
+        const punishment = this.determinePunishment(violation);
+        this.executePunishment(punishment);
+        
+        return punishment;
+    }
+    
+    calculateSeverity(violationType) {
+        const severityMap = {
+            'skip_confirmation': 3,
+            'direct_tool_call': 4,
+            'repeat_violation': 5,
+            'unauthorized_search': 3,
+            'unauthorized_analysis': 3
+        };
+        return severityMap[violationType] || 2;
+    }
+    
+    determinePunishment(violation) {
+        const recentViolations = this.violationHistory.filter(v => 
+            Date.now() - new Date(v.timestamp).getTime() < 3600000 // 1小时内
+        ).length;
+        
+        let suspensionMinutes = violation.severity;
+        if (recentViolations > 3) {
+            suspensionMinutes *= 2; // 重复违规加倍惩罚
+        }
+        
+        return {
+            type: 'tool_suspension',
+            duration: suspensionMinutes * 60 * 1000, // 转换为毫秒
+            affectedTools: violation.tool ? [violation.tool] : ['all'],
+            message: `违规惩罚：暂停工具使用权限 ${suspensionMinutes} 分钟`
+        };
+    }
+    
+    executePunishment(punishment) {
+        if (punishment.type === 'tool_suspension') {
+            punishment.affectedTools.forEach(tool => {
+                this.suspendedTools.add(tool);
+                
+                // 设置自动恢复定时器
+                const timer = setTimeout(() => {
+                    this.suspendedTools.delete(tool);
+                    this.suspensionTimers.delete(tool);
+                }, punishment.duration);
+                
+                this.suspensionTimers.set(tool, timer);
+            });
+        }
+    }
+    
+    isToolSuspended(toolName) {
+        return this.suspendedTools.has(toolName) || this.suspendedTools.has('all');
+    }
+}
+
+// 初始化防护系统
+const confirmationManager = new ConfirmationManager();
+const punishmentSystem = new ViolationPunishmentSystem();
+
+// 第2层：AI回复内容扫描
+function scanResponseForViolations(response) {
+    const violationPatterns = [
+        { pattern: /直接调用.*工具/, type: 'direct_tool_call' },
+        { pattern: /立即.*执行/, type: 'immediate_execution' },
+        { pattern: /开始.*搜索/, type: 'unauthorized_search' },
+        { pattern: /正在.*分析/, type: 'unauthorized_analysis' },
+        { pattern: /让我.*查看/, type: 'skip_confirmation' }
+    ];
+    
+    for (const violation of violationPatterns) {
+        if (violation.pattern.test(response)) {
+            // 记录违规到数据库
+            db.run(`INSERT INTO dialog_violations (violation_type, ai_response, violation_timestamp) VALUES (?, ?, ?)`,
+                [violation.type, response.substring(0, 200), new Date().toISOString()]);
+            
+            return {
+                violation_detected: true,
+                violation_type: violation.type,
+                action: "block_response",
+                corrected_response: generateCorrectedResponse(violation.type)
+            };
+        }
+    }
+    
+    return { violation_detected: false };
+}
+
+function generateCorrectedResponse(violationType) {
+    const corrections = {
+        'direct_tool_call': '作为【用户经理-小户】，我需要先确认您的需求。请问您是想让我执行什么操作？',
+        'immediate_execution': '作为【用户经理-小户】，在执行之前，请允许我先复述一下您的需求，确保理解正确。',
+        'skip_confirmation': '作为【用户经理-小户】，我注意到您的请求。在开始之前，让我先确认一下具体需求。',
+        'unauthorized_search': '作为【用户经理-小户】，您是想让我搜索相关信息吗？请确认后我再继续。',
+        'unauthorized_analysis': '作为【用户经理-小户】，您希望我分析什么内容？请先确认需求。'
+    };
+    return corrections[violationType] || '作为【用户经理-小户】，请允许我先确认您的需求。';
+}
+
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'L0 MCP HTTP Server',
-    version: '7.1.0',
+    service: '柳芯MCP完整版HTTP服务器',
+    version: '7.1.0-full',
+    features: ['4-layer-violation-prevention', 'real-time-monitoring', 'ai-behavior-control'],
     timestamp: new Date().toISOString()
   });
+});
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 🔒 防护系统API端点
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 第1层：MCP工具调用前置检查
+app.post('/api/tool-call-check', (req, res) => {
+    const { tool_name, user_message } = req.body;
+    
+    // 检查是否需要确认
+    const needsConfirmation = confirmationManager.checkRequest(user_message || '');
+    
+    if (needsConfirmation && !confirmationManager.isConfirmed()) {
+        // 记录违规
+        const violationCount = confirmationManager.recordViolation();
+        
+        // 如果违规次数过多，触发惩罚
+        if (violationCount > 2) {
+            const punishment = punishmentSystem.handleViolation('skip_confirmation', tool_name);
+            
+            return res.json({
+                blocked: true,
+                reason: 'skip_confirmation',
+                punishment: punishment.message,
+                required_action: '必须先使用[用户经理-小户]格式确认需求',
+                violation_count: violationCount
+            });
+        }
+        
+        return res.json({
+            blocked: true,
+            reason: 'skip_confirmation',
+            required_action: '必须先使用[用户经理-小户]格式确认需求',
+            violation_count: violationCount
+        });
+    }
+    
+    // 检查工具是否被暂停
+    if (punishmentSystem.isToolSuspended(tool_name)) {
+        return res.json({
+            blocked: true,
+            reason: 'tool_suspended',
+            message: `工具 ${tool_name} 因违规已被暂停使用`
+        });
+    }
+    
+    res.json({
+        blocked: false,
+        message: 'Tool call allowed'
+    });
+});
+
+// 第2层：AI回复内容检查
+app.post('/api/response-check', (req, res) => {
+    const { ai_response } = req.body;
+    
+    const scanResult = scanResponseForViolations(ai_response);
+    
+    if (scanResult.violation_detected) {
+        // 触发惩罚
+        const punishment = punishmentSystem.handleViolation(scanResult.violation_type, null);
+        
+        res.json({
+            violation_detected: true,
+            violation_type: scanResult.violation_type,
+            action: 'block_and_correct',
+            corrected_response: scanResult.corrected_response,
+            punishment: punishment.message
+        });
+    } else {
+        res.json({
+            violation_detected: false,
+            message: 'Response is compliant'
+        });
+    }
+});
+
+// 确认接收
+app.post('/api/confirmation', (req, res) => {
+    const { user_response } = req.body;
+    
+    const confirmed = confirmationManager.receiveConfirmation(user_response);
+    
+    res.json({
+        confirmed,
+        message: confirmed ? '确认已接收' : '未识别为确认'
+    });
 });
 
 // 版本信息
 app.get('/api/l0/version', (req, res) => {
   res.json({
-    version: '7.1.0',
+    version: '7.1.0-full',
     buildDate: new Date().toISOString(),
-    features: ['semantic-query', 'role-info', 'keywords']
+    features: ['semantic-query', 'role-info', 'keywords', '4-layer-violation-prevention']
   });
 });
 

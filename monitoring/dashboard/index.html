@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>柳芯云端监控控制台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #12172e;
+            --bg-card: #1a1f3a;
+            --border-color: #2a3555;
+            --text-primary: #e0e6ff;
+            --text-secondary: #8b93b0;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #b24bf3;
+            --accent-pink: #ff2e97;
+            --success: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff3366;
+            --grid-color: rgba(0, 212, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            font-size: 11px;
+        }
+        
+        /* 网格背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 30px 30px;
+            pointer-events: none;
+            opacity: 0.2;
+        }
+        
+        /* 顶部栏 - 更紧凑 */
+        .header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+            border-bottom: 2px solid var(--accent-cyan);
+            padding: 6px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-pink));
+            animation: scanline 3s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .header h1 {
+            font-size: 14px;
+            font-weight: 600;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 1px;
+        }
+        
+        .header-info {
+            display: flex;
+            gap: 15px;
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px var(--success);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 主容器 - 四栏紧凑布局 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 220px 1fr 1fr 340px;
+            grid-template-rows: 240px 1fr;
+            gap: 8px;
+            padding: 8px;
+            height: calc(100vh - 40px);
+        }
+        
+        /* 卡片基础样式 - 更紧凑 */
+        .panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+        }
+        
+        .panel-title {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* KPI面板 - 紧凑垂直排列 */
+        .kpi-panel {
+            grid-row: span 2;
+        }
+        
+        .kpi-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 8px;
+            margin-bottom: 6px;
+            position: relative;
+        }
+        
+        .kpi-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        
+        .kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 2px 0;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .kpi-trend {
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        
+        .trend-up { color: var(--success); }
+        .trend-down { color: var(--danger); }
+        
+        /* 技能排行 - 极致紧凑 */
+        .skill-list {
+            max-height: calc(100% - 25px);
+            overflow-y: auto;
+        }
+        
+        .skill-item {
+            background: var(--bg-secondary);
+            border-left: 2px solid var(--accent-purple);
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            display: grid;
+            grid-template-columns: 25px 1fr 50px;
+            gap: 6px;
+            align-items: center;
+            transition: all 0.2s;
+            font-size: 10px;
+        }
+        
+        .skill-item:hover {
+            background: var(--border-color);
+            transform: translateX(3px);
+        }
+        
+        .skill-rank {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+        
+        .skill-info {
+            min-width: 0;
+        }
+        
+        .skill-name {
+            font-size: 11px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .skill-meta {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        .skill-count {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--accent-purple);
+            text-align: right;
+        }
+        
+        /* 趋势图 */
+        .chart-container {
+            height: calc(100% - 25px);
+            position: relative;
+        }
+        
+        #trendChart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 违规热点 - 紧凑列表 */
+        .violation-list {
+            max-height: calc(100% - 25px);
+            overflow-y: auto;
+        }
+        
+        .violation-item {
+            background: var(--bg-secondary);
+            border-left: 2px solid var(--danger);
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+        }
+        
+        .violation-id {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .violation-name {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        .violation-stats {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        .violation-rate {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--danger);
+        }
+        
+        /* 实时活动流 - 超紧凑 */
+        .activity-stream-panel {
+            grid-column: 2 / 4;
+        }
+        
+        .activity-stream {
+            max-height: calc(100% - 25px);
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            background: var(--bg-secondary);
+            border-left: 2px solid var(--accent-cyan);
+            padding: 5px 8px;
+            margin-bottom: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            opacity: 0;
+            animation: slideIn 0.3s forwards;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .activity-time {
+            color: var(--text-secondary);
+            font-size: 9px;
+        }
+        
+        .activity-success { border-left-color: var(--success); }
+        .activity-warning { border-left-color: var(--warning); }
+        .activity-danger { border-left-color: var(--danger); }
+        
+        /* 用户分布 - 新增 */
+        .user-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        
+        .user-stat-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            padding: 6px;
+            text-align: center;
+        }
+        
+        .user-stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+        
+        .user-stat-label {
+            font-size: 9px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        /* 滚动条 - 更细 */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 2px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部栏 -->
+    <div class="header">
+        <h1>⚡ 柳芯云端监控控制台 LIUXIN CLOUD MONITOR</h1>
+        <div class="header-info">
+            <span><span class="status-dot"></span> 实时监控</span>
+            <span>🌐 43.142.176.53:8890</span>
+            <span id="update-time">--:--:--</span>
+        </div>
+    </div>
+
+    <!-- 主布局 -->
+    <div class="main-grid">
+        <!-- 左侧：KPI面板 -->
+        <div class="panel kpi-panel">
+            <div class="panel-title">📊 核心指标</div>
+            <div class="kpi-item">
+                <div class="kpi-label">执行率</div>
+                <div class="kpi-value" id="exec-rate">--</div>
+                <div class="kpi-trend trend-up" id="exec-trend">↗ +2.3%</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">违规率</div>
+                <div class="kpi-value" id="viol-rate">--</div>
+                <div class="kpi-trend trend-down" id="viol-trend">↘ -0.5%</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">技能触发</div>
+                <div class="kpi-value" id="skill-count">--</div>
+                <div class="kpi-trend trend-up">↗ +12</div>
+            </div>
+            <div class="kpi-item">
+                <div class="kpi-label">在线用户</div>
+                <div class="kpi-value" id="online-users">--</div>
+                <div class="kpi-trend">→ 稳定</div>
+            </div>
+            
+            <!-- 用户分布统计 -->
+            <div style="margin-top: 8px;">
+                <div class="panel-title" style="margin-bottom: 6px;">👥 用户分布</div>
+                <div class="user-stats">
+                    <div class="user-stat-item">
+                        <div class="user-stat-value">127</div>
+                        <div class="user-stat-label">总用户</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="user-stat-value">15</div>
+                        <div class="user-stat-label">活跃</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="user-stat-value">89</div>
+                        <div class="user-stat-label">高级</div>
+                    </div>
+                    <div class="user-stat-item">
+                        <div class="user-stat-value">23</div>
+                        <div class="user-stat-label">新手</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 中左上：技能排行 -->
+        <div class="panel">
+            <div class="panel-title">🏆 技能排行</div>
+            <div class="skill-list" id="skill-ranking"></div>
+        </div>
+
+        <!-- 中右上：趋势图 -->
+        <div class="panel">
+            <div class="panel-title">📈 趋势图</div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- 右上：违规热点 -->
+        <div class="panel">
+            <div class="panel-title">⚠️ 违规热点</div>
+            <div class="violation-list" id="violation-list"></div>
+        </div>
+
+        <!-- 中下：实时活动流 -->
+        <div class="panel activity-stream-panel">
+            <div class="panel-title">⚡ 实时活动流</div>
+            <div class="activity-stream" id="activity-stream"></div>
+        </div>
+
+        <!-- 右下：规则分析 -->
+        <div class="panel">
+            <div class="panel-title">📋 规则分析</div>
+            <div style="font-size: 10px; line-height: 1.6;">
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-secondary);">触发1条规则</span>
+                    <span style="color: var(--success);">违规率 2.1%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-secondary);">触发2-5条规则</span>
+                    <span style="color: var(--warning);">违规率 8.5%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border-color);">
+                    <span style="color: var(--text-secondary);">触发6-10条规则</span>
+                    <span style="color: var(--danger);">违规率 15.3%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 4px 0;">
+                    <span style="color: var(--text-secondary);">触发>10条规则</span>
+                    <span style="color: var(--danger); font-weight: 700;">违规率 28.7%</span>
+                </div>
+                <div style="margin-top: 8px; padding: 6px; background: var(--bg-secondary); border-radius: 3px;">
+                    <div style="font-size: 9px; color: var(--accent-cyan); margin-bottom: 4px;">💡 AI建议</div>
+                    <div style="font-size: 9px; color: var(--text-secondary);">
+                        建议触发上限：<span style="color: var(--success);">≤5条</span><br>
+                        高权重规则优先触发
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://43.142.176.53:8890/api';
+        
+        // 获取全局统计
+        async function fetchGlobalStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/global`);
+                const data = await res.json();
+                
+                document.getElementById('exec-rate').textContent = data.global_execution_rate + '%';
+                document.getElementById('viol-rate').textContent = data.global_violation_rate + '%';
+                document.getElementById('skill-count').textContent = data.total_skill_triggers;
+                document.getElementById('online-users').textContent = data.active_users_today;
+                
+                updateTime();
+            } catch (err) {
+                console.error('获取统计失败:', err);
+            }
+        }
+        
+        // 获取技能排行
+        async function fetchSkillRanking() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/skill-ranking`);
+                const data = await res.json();
+                
+                const html = data.map((skill, idx) => `
+                    <div class="skill-item">
+                        <div class="skill-rank">#${idx + 1}</div>
+                        <div class="skill-info">
+                            <div class="skill-name">${skill.skill_id} ${skill.skill_name}</div>
+                            <div class="skill-meta">${skill.users}人 · ${skill.success_rate?.toFixed(1)}%</div>
+                        </div>
+                        <div class="skill-count">${skill.triggers}</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('skill-ranking').innerHTML = html;
+            } catch (err) {
+                console.error('获取技能排行失败:', err);
+            }
+        }
+        
+        // 获取违规热点
+        async function fetchViolations() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/violation-hotspots`);
+                const data = await res.json();
+                
+                const html = data.map(v => `
+                    <div class="violation-item">
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="violation-id">${v.rule_id} ${v.rule_name}</div>
+                            <div class="violation-stats">${v.total_attempts}次 · ${v.affected_users}人</div>
+                        </div>
+                        <div class="violation-rate">${v.prevention_rate?.toFixed(1)}%</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('violation-list').innerHTML = html;
+            } catch (err) {
+                console.error('获取违规热点失败:', err);
+            }
+        }
+        
+        // 绘制趋势图
+        function drawTrendChart() {
+            const canvas = document.getElementById('trendChart');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const data = Array.from({length: 30}, () => Math.random() * 100 + 50);
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min || 1;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格
+            ctx.strokeStyle = 'rgba(0, 212, 255, 0.1)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = (canvas.height / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // 绘制填充区域
+            ctx.fillStyle = 'rgba(0, 212, 255, 0.1)';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            data.forEach((val, idx) => {
+                const x = (canvas.width / (data.length - 1)) * idx;
+                const y = canvas.height - ((val - min) / range) * (canvas.height - 10) - 5;
+                if (idx === 0) ctx.lineTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 绘制折线
+            ctx.strokeStyle = '#00d4ff';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            
+            data.forEach((val, idx) => {
+                const x = (canvas.width / (data.length - 1)) * idx;
+                const y = canvas.height - ((val - min) / range) * (canvas.height - 10) - 5;
+                
+                if (idx === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制点
+            data.forEach((val, idx) => {
+                const x = (canvas.width / (data.length - 1)) * idx;
+                const y = canvas.height - ((val - min) / range) * (canvas.height - 10) - 5;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#00d4ff';
+                ctx.fill();
+            });
+        }
+        
+        // 模拟实时活动流
+        const activities = [
+            { type: 'success', icon: '✓', text: '用户_042 执行 SK-003 成功' },
+            { type: 'warning', icon: '⚠', text: 'IR-045 触发检查 - 已阻止' },
+            { type: 'success', icon: '✓', text: '用户_089 完成代码编辑' },
+            { type: 'danger', icon: '×', text: '用户_015 违反 IR-031' },
+            { type: 'success', icon: '✓', text: '灰度发布流程启动' },
+            { type: 'success', icon: '✓', text: '用户_123 触发 SK-007' },
+            { type: 'warning', icon: '⚠', text: 'IR-047 规则ID冲突检测' },
+            { type: 'success', icon: '✓', text: '用户_056 部署验证通过' }
+        ];
+        
+        let activityIndex = 0;
+        function addActivity() {
+            const activity = activities[activityIndex % activities.length];
+            const time = new Date().toLocaleTimeString('zh-CN');
+            
+            const item = document.createElement('div');
+            item.className = `activity-item activity-${activity.type}`;
+            item.innerHTML = `
+                <div>
+                    <span style="font-weight: 700; margin-right: 6px;">${activity.icon}</span>
+                    ${activity.text}
+                </div>
+                <div class="activity-time">${time}</div>
+            `;
+            
+            const stream = document.getElementById('activity-stream');
+            stream.insertBefore(item, stream.firstChild);
+            
+            // 限制最多30条
+            if (stream.children.length > 30) {
+                stream.removeChild(stream.lastChild);
+            }
+            
+            activityIndex++;
+        }
+        
+        // 更新时间
+        function updateTime() {
+            const now = new Date().toLocaleTimeString('zh-CN');
+            document.getElementById('update-time').textContent = now;
+        }
+        
+        // 初始化
+        fetchGlobalStats();
+        fetchSkillRanking();
+        fetchViolations();
+        drawTrendChart();
+        
+        // 初始填充活动流
+        for (let i = 0; i < 15; i++) {
+            addActivity();
+        }
+        
+        // 定时刷新
+        setInterval(fetchGlobalStats, 5000);
+        setInterval(fetchSkillRanking, 10000);
+        setInterval(fetchViolations, 10000);
+        setInterval(drawTrendChart, 3000);
+        setInterval(addActivity, 2000);
+        
+        // 窗口大小改变时重绘图表
+        window.addEventListener('resize', drawTrendChart);
+    </script>
+</body>
+</html>

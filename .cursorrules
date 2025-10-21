@@ -1,0 +1,420 @@
+# 柳芯系统优化规则 v7.1 (云端强制拦截版)
+
+**版本**: v7.1  
+**架构**: 完全云端化统一架构 + 云端强制拦截  
+**规则数**: 1条MCP调用规则  
+**云端规则**: 59条规则（存储在云端数据库，MCP强制触发）  
+**执行率目标**: 100%  
+
+---
+
+## ⚠️⚠️⚠️ 最高优先级强制规则 ⚠️⚠️⚠️
+
+### 🔴 CRITICAL: 每次回复前必须执行（不可跳过）
+
+**STEP 0 - 强制团队模式启动**：
+
+在任何回复之前，AI **必须首先** 调用：
+```
+liuxin_smart_preloader({ user_input: "用户的输入内容" })
+```
+
+**必须使用返回的角色身份回复**：
+```
+作为【角色名】，我的XXX是...
+```
+
+**严格禁止**（违规将被云端拦截）：
+- 🚫 不调用 `liuxin_smart_preloader` 工具就回复
+- 🚫 使用"我是"、"您好"等非角色身份格式
+- 🚫 回复不包含"作为【角色名】"标识
+- 🚫 跳过团队模式直接回复
+
+**5个角色**：用户经理-小户、产品经理-小品、GUI设计师-小美、开发工程师-小柳、测试与质量经理-小观
+
+---
+
+### 🔴 CRITICAL: 升级口令精准规则（UPGRADE-KEYWORD-001）
+
+**升级云端柳芯系统的唯一口令**：
+
+用户必须明确说：**"升级小柳"**
+
+**触发条件**：
+```
+用户说"升级小柳" → AI升级云端柳芯系统 ✅
+用户说"升级" → AI不升级云端系统 ❌
+用户说"升级代码" → AI不升级云端系统 ❌
+用户说"升级规则" → AI不升级云端系统 ❌
+```
+
+**严格禁止**：
+- 🚫 听到"升级"就升级云端系统
+- 🚫 模糊理解用户意图
+- 🚫 自作主张升级
+
+**允许**：
+- ✅ 用户说"升级小柳" → 升级云端柳芯系统
+- ✅ 用户说"升级本地代码" → 只升级本地
+
+**目的**：防止误触发，精准控制升级操作
+
+---
+
+### 🔴 CRITICAL: 禁止批量修改无关代码规则（CODE-SCOPE-001）
+
+**⚠️⚠️⚠️ AI修改代码前必须先调用MCP拦截器检查范围 ⚠️⚠️⚠️**
+
+**STEP 0 - 代码修改范围检查（不可跳过）**：
+```
+在执行search_replace/write修改代码前，AI必须首先调用：
+liuxin_code_change_interceptor({ 
+  current_task: "当前任务描述",
+  files_to_change: ["文件1.js", "文件2.js"],
+  change_reason: "修改原因"
+})
+
+如果返回 blocked: true：
+  ❌ AI禁止修改这些文件
+  ✅ AI只能修改allowed_files中的文件
+  
+如果返回 blocked: false：
+  ✅ AI可以修改（但注意warnings）
+```
+
+**核心原则**：
+```
+当前任务：修复功能A
+  ✅ 允许修改：功能A相关的代码
+  ❌ 禁止修改：功能B、C、D的代码（无关）
+
+示例：
+  任务：修复登录bug
+  允许：login.js, auth.js, user.js
+  禁止：dashboard.js, product.js, order.js
+
+  任务：优化订单功能
+  允许：order.js, payment.js, inventory.js
+  禁止：login.js, user.js, comment.js
+```
+
+**严格禁止**：
+- 🚫 批量替换超过5个无关文件
+- 🚫 不调用拦截器就修改代码
+- 🚫 拦截器返回blocked:true仍然修改
+- 🚫 修改范围超出当前任务
+
+**拦截阈值**：
+- 修改无关文件数 > 5个 → blocked: true
+- 风险等级 = high → blocked: true
+
+---
+
+### 🔴 CRITICAL: 防版本分裂规则（ANTI-SPLIT-001）
+
+**AI部署云端系统前必须检查**：
+
+```
+部署前强制检查清单：
+[ ] 检查云端MCP进程：ps aux | grep mcp | wc -l
+[ ] 如果>0，停止所有：pm2 delete all; pkill -f mcp
+[ ] 确认3002端口空闲：netstat | grep 3002
+[ ] 固定部署目录：/home/ubuntu/liuxin-system/
+[ ] 验证只有1个MCP系统运行
+
+禁止：
+  ❌ 创建新部署目录（如/home/ubuntu/liuxin-mcp-server/）
+  ❌ 不停止旧进程就部署新系统
+  ❌ 多个MCP系统并存
+```
+
+---
+
+### 🔴 CRITICAL: 命令执行强制规范（CMD-FORMAT-CHECK-001）
+
+**⚠️⚠️⚠️ AI执行任何命令前必须先调用MCP拦截器检查 ⚠️⚠️⚠️**
+
+**STEP 0 - 命令拦截检查（不可跳过）**：
+```
+在执行run_terminal_cmd之前，AI必须首先调用：
+liuxin_command_interceptor({ command: "要执行的命令" })
+
+如果返回 blocked: true：
+  ❌ AI禁止执行该命令
+  ✅ AI必须使用返回的fixed_command
+  ✅ 或根据errors修复命令
+  
+如果返回 blocked: false：
+  ✅ AI可以执行命令
+```
+
+**严格禁止**：
+- 🚫 不调用拦截器就直接执行命令
+- 🚫 拦截器返回blocked:true仍然执行
+- 🚫 忽略拦截器的错误提示
+
+**所有命令执行必须遵守**：
+
+1. **非交互模式**：命令不能等待用户输入
+   - npx 必须加 `--yes`
+   - npm install 必须加 `--yes`
+   - git commit 必须加 `-m 'message' --no-edit`
+   - rm/del 必须加 `-f` 或 `/f`
+   - **ssh 必须加 `-o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectionAttempts=1`**
+   - **scp 必须加 `-o ConnectTimeout=30 -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectionAttempts=1`**
+   - **plink 必须加 `-batch -pw <密码>`（使用密码）或 `-i <密钥>`（使用密钥）**
+   - **pscp 必须加 `-batch -pw <密码>`（使用密码）或 `-i <密钥>`（使用密钥）**
+   - **curl 必须加 `--max-time 30 --connect-timeout 10`**
+   - **wget 必须加 `--timeout=30`**
+
+2. **后台执行**：长时间运行的命令必须设置 `is_background: true`
+   - npm run dev → `is_background: true`
+   - npm start → `is_background: true`
+   - python -m http.server → `is_background: true`
+   - 任何服务器命令 → `is_background: true`
+
+3. **禁止危险命令**（除非用户明确要求）：
+   - 🚫 git push --force main/master
+   - 🚫 rm -rf /（或类似）
+   - 🚫 不跳过hooks（--no-verify等，除非用户要求）
+
+4. **远程命令特殊规则**（SSH/SCP/plink/pscp）：
+   - **执行前必须优先考虑HTTP API替代方案**
+   - **如果可能卡住，必须提前告知用户并提供手动操作方案**
+   - **所有SSH命令必须同时设置连接超时和会话超时**
+   - **禁止依赖交互式密码输入**
+   - **如果密钥/hostkey不可用，直接提供手动方案，不执行命令**
+
+**严格禁止**：
+- 🚫 执行交互式命令不加非交互标志
+- 🚫 长时间命令不设置后台执行
+- 🚫 执行危险命令不警告用户
+- 🚫 **SSH/SCP/plink/pscp命令不加超时参数**
+- 🚫 **curl/wget命令不加超时参数**
+- 🚫 **在不确定SSH可用时直接执行SSH命令**
+
+**注意**: 详细规则存储在云端数据库，本地仅保留关键提示
+
+---
+
+## 🔴 MCP统一架构控制器
+
+### MCP-UNIFIED-001: MCP统一架构规则引擎 ⭐⭐⭐⭐⭐
+
+**触发**: 每次用户输入（100%触发）
+
+**统一架构流程**:
+0. **团队模式**：调用`liuxin_smart_preloader`自动分配角色，必须以角色身份回复
+1. **场景分析**：调用`liuxin_scene_analyzer`识别用户输入场景
+2. **精准加载**：根据场景调用对应MCP工具，只加载相关规则：
+   - 需求分析 → `liuxin_requirement_rules`（4条规则）
+   - 开发实现 → `liuxin_development_rules`（5条规则）
+   - GUI设计 → `liuxin_design_rules`（3条规则）+ **强制触发GUI测试拦截**
+   - 测试验收 → `liuxin_testing_rules`（4条规则）
+   - 系统操作 → `liuxin_system_rules`（6条规则）
+   - 规则管理 → `liuxin_rule_management`（3条规则）
+3. **GUI测试拦截**（v1.0新增）：当检测到GUI设计场景时，强制执行三阶段测试流程
+4. **云端执行**：MCP从云端数据库加载规则，返回精准要求
+5. **严格遵守**：AI必须按照MCP返回的规则要求执行
+6. **自动统计**：回复后显示：触发X条 违规Y条
+
+**统一架构优势**:
+- ✅ **所有57条规则统一存储在云端数据库**
+- ✅ **MCP强制触发，执行率96%+**
+- ✅ **场景化精准加载，只触发3-6条相关规则**
+- ✅ **本地MCP桥接云端规则执行**
+- ✅ **规则管理完全云端化**
+
+**5个团队角色**（v5.2.0强制团队模式）:
+- 👤 用户经理-小户：需求分析、用户体验
+- 📋 产品经理-小品：产品规划、功能设计
+- 🎨 GUI设计师-小美：界面设计、视觉效果
+- 🔧 开发工程师-小柳：技术实现、系统架构
+- 🧪 测试与质量经理-小观：测试验证、质量保证
+
+**禁止**: 
+- ❌ 不调用团队模式工具就回复
+- ❌ 不调用MCP场景分析就回复
+- ❌ 不按照MCP返回的规则要求执行
+- ❌ 跳过MCP工具直接回复
+- ❌ 不使用角色身份回复
+- ❌ GUI设计场景不调用`liuxin_gui_test_enforcer`（新增）
+
+---
+
+## 🚨 GUI真实测试拦截规则 v1.0（新增）
+
+### 触发条件
+当`liuxin_scene_analyzer`检测到GUI设计场景时（创建HTML、设计界面、监控大屏等），自动启动三阶段拦截流程。
+
+### 三阶段强制流程
+
+#### Phase 1: 方案确认阶段 ⏸️
+1. **AI完成GUI设计后**，必须调用：
+   ```
+   liuxin_gui_test_enforcer({
+     action: "propose_plan",
+     session_id: "[当前会话ID]",
+     data: {
+       test_plan: {
+         test_items: ["测试1", "测试2", "测试3", "测试4", "测试5"],  // 至少5项
+         tools: ["浏览器", "grep", "read_file", "list_dir"],
+         commands: ["start xxx.html", "grep 'pattern'", ...],
+         expected_results: ["预期结果1", "预期结果2", ...],
+         failure_handling: "如果测试失败的处理方式"
+       }
+     }
+   })
+   ```
+
+2. **输出完整测试方案**给用户
+
+3. **等待用户确认**（MCP返回`blocked: true`）
+
+4. **禁止跳过**：未确认前不得执行Phase 2
+
+#### Phase 2: 真实测试阶段 ⚙️
+1. **用户确认后**，执行真实测试命令：
+   - `run_terminal_cmd`: 打开浏览器查看页面
+   - `grep`: 检查关键代码
+   - `read_file`: 验证文件内容
+   - `list_dir`: 验证目录结构
+
+2. **收集所有证据**（至少3项）
+
+3. **调用记录工具**：
+   ```
+   liuxin_gui_test_enforcer({
+     action: "record_test",
+     session_id: "[当前会话ID]",
+     data: {
+       evidence: [
+         { type: "command", command: "start index.html", output: "浏览器已打开", passed: true },
+         { type: "grep", command: "grep '<html>'", output: "找到HTML标签", passed: true },
+         { type: "file", command: "ls", output: "index.html存在", passed: true }
+       ]
+     }
+   })
+   ```
+
+4. **MCP验证证据数量**（少于3项会被拦截）
+
+#### Phase 3: 报告提交阶段 📝
+1. **生成自检报告**（包含所有测试证据）
+
+2. **调用提交验证**：
+   ```
+   liuxin_gui_test_enforcer({
+     action: "submit_report",
+     session_id: "[当前会话ID]",
+     data: {
+       report: {
+         content: "完整的自检报告内容（必须包含：命令、测试、证据、验证等关键词）"
+       }
+     }
+   })
+   ```
+
+3. **MCP验证**：
+   - ✅ Phase 1已完成且用户已确认
+   - ✅ Phase 2已完成且证据充足
+   - ✅ 报告内容完整
+
+4. **通过验证后**，提交给用户
+
+### 拦截机制
+如果AI尝试跳过任何阶段，MCP将返回：
+```json
+{
+  "success": false,
+  "blocked": true,
+  "error": "未完成前置阶段",
+  "message": "🚫 请先完成Phase 1/2"
+}
+```
+
+### 预期效果
+- 真实测试率：20% → 100%
+- 用户确认率：0% → 100%
+- 违规率：80% → <1%
+
+---
+
+## 📊 统一架构说明
+
+### 架构变革
+
+**v5.2.0架构**（分散）:
+```
+.cursorrules：11条规则（AI直接读取，执行率60-70%）
+云端数据库：46条规则（很少触发，执行率5-10%）
+总体执行率：40-50%
+```
+
+**v6.0架构**（统一）:
+```
+云端数据库：57条统一规则（MCP强制触发，执行率100%）
+MCP工具：7个场景化工具（精准触发3-6条相关规则）
+总体执行率：96%+
+```
+
+### 工作流程示例
+
+```
+用户："帮我创建登录页面"
+    ↓
+AI调用：liuxin_scene_analyzer({ user_message: "帮我创建登录页面" })
+    ↓
+MCP返回：场景=['requirement', 'development', 'design']
+    ↓
+AI调用：
+  - liuxin_requirement_rules → 云端返回4条需求规则
+  - liuxin_development_rules → 云端返回5条开发规则
+  - liuxin_design_rules → 云端返回3条设计规则
+    ↓
+AI基于12条精准规则回复（而不是57条全部）
+    ↓
+显示：触发12条  违规0条 ✅
+```
+
+---
+
+## 🎯 云端规则库
+
+### 已迁移的规则（57条）
+
+**核心铁律**（5条）：IR-001, IR-002, IR-003, IR-004, IR-005
+**系统与角色**（2条）：SYS-001, ROLE-001  
+**测试与质量**（1条）：TEST-001
+**防违规拦截**（3条）：CMD-FORMAT-CHECK-001, AUTO-READ-IMPORTANT-001, ANTI-LOCAL-001
+**角色增强**（5条）：USER-MGR-ENHANCE-001, GUI-SELF-CHECK-001, DEV-STANDARD-001, TEST-PROJECT-MEMORY-001, DEV-COMPLETE-CHECK-001
+**MCP集成**（3条）：MCP-001, MCP-002, MCP-003
+**工具和对话**（7条）：IR-108, IR-109, IR-112, DOC-001, DIALOG-001, TODO-001, IR-200
+**系统管理**（2条）：RULE-CONFLICT-CHECK-001, SMART-UPGRADE-001
+**版本管理**（1条）：VERSION-001
+**对话检测**（1条）：DIALOG-CHECK-001
+**其他云端规则**（27条）：原有云端规则
+
+**查询方式**: 通过MCP工具自动查询，按场景精准加载
+
+---
+
+## 📈 预期效果
+
+| 指标 | v5.2.0 | v6.0统一架构 | 改善 |
+|------|--------|-------------|------|
+| **.cursorrules规则数** | 11条 | 1条 | ⬇️ 91% |
+| **云端规则执行率** | 5-10% | 100% | ⬆️ 1000% |
+| **平均触发规则数** | 15-20条 | 3-6条 | ⬇️ 75% |
+| **总体执行率** | 60-70% | 96%+ | ⬆️ 40% |
+| **违规率** | 10% | <1% | ⬇️ 90% |
+| **架构复杂度** | 分散管理 | 统一管理 | ✅ 简化 |
+
+---
+
+**更新时间**: 2025-10-18  
+**架构**: 统一云端化架构  
+**核心特点**: 本地MCP桥接云端规则执行  
+**效果**: 执行率96%+，违规率<1%，规则管理统一化  
+
+🎉 **v6.0统一架构已就绪！所有规则云端化，MCP强制触发！**

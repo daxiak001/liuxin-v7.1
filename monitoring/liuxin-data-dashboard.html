@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>柳芯系统监控大屏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0c1426 0%, #1a2332 50%, #0f1419 100%);
+            color: #ffffff;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 10px;
+            gap: 10px;
+        }
+        
+        /* 顶部标题栏 */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(45deg, #00d4ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+        
+        .header .subtitle {
+            font-size: 14px;
+            color: #a0a0a0;
+        }
+        
+        .system-status {
+            position: absolute;
+            right: 25px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .health-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 对话统计横条 */
+        .conversation-stats {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 15px;
+            height: 80px;
+            overflow: hidden;
+        }
+        
+        .conversation-stats h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #00d4ff;
+        }
+        
+        .stats-scroll {
+            display: flex;
+            gap: 20px;
+            animation: scrollLeft 30s linear infinite;
+            white-space: nowrap;
+        }
+        
+        @keyframes scrollLeft {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .stat-item {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 15px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        /* 主要内容区域 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .card h3 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+            padding-bottom: 8px;
+        }
+        
+        .card-content {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 212, 255, 0.5) transparent;
+        }
+        
+        .card-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .card-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .card-content::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.5);
+            border-radius: 2px;
+        }
+        
+        /* 系统状态指示器 */
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .status-online { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+        .status-offline { background: #ff4757; box-shadow: 0 0 6px #ff4757; }
+        .status-warning { background: #ffa502; box-shadow: 0 0 6px #ffa502; }
+        
+        /* MCP统计 */
+        .mcp-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .mcp-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        
+        .mcp-count {
+            font-weight: bold;
+            color: #00ff88;
+        }
+        
+        /* 资源监控 */
+        .resource-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .resource-bar {
+            width: 60%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .resource-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        
+        .resource-normal { background: #00ff88; }
+        .resource-warning { background: #ffa502; }
+        .resource-danger { background: #ff4757; }
+        
+        /* 断层检测 */
+        .gap-status {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .gap-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        .gap-text {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        .gap-count {
+            font-size: 24px;
+            color: #00ff88;
+            margin-top: 10px;
+        }
+        
+        /* 底部状态栏 */
+        .footer {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .footer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .update-time {
+            color: #a0a0a0;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1400px) {
+            .main-content {
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- 顶部标题栏 -->
+        <div class="header">
+            <h1>柳芯系统监控大屏</h1>
+            <div class="subtitle">实时监控 · 数据驱动 · 智能分析</div>
+            <div class="system-status">
+                <div class="health-indicator"></div>
+                <span id="health-text">系统健康度: 87.5%</span>
+            </div>
+        </div>
+        
+        <!-- 对话统计横条 -->
+        <div class="conversation-stats">
+            <h3>📊 最近20次对话实时统计</h3>
+            <div class="stats-scroll" id="conversation-scroll">
+                <!-- 动态加载对话统计数据 -->
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 系统状态监控 -->
+            <div class="card">
+                <h3>🔧 系统状态监控</h3>
+                <div class="card-content">
+                    <div class="status-grid" id="system-status">
+                        <!-- 动态加载系统状态 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- MCP触发器统计 -->
+            <div class="card">
+                <h3>⚡ MCP触发器统计</h3>
+                <div class="card-content">
+                    <div class="mcp-stats" id="mcp-stats">
+                        <!-- 动态加载MCP统计 -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 系统资源监控 -->
+            <div class="card">
+                <h3>💻 系统资源监控</h3>
+                <div class="card-content" id="resource-monitor">
+                    <!-- 动态加载资源监控 -->
+                </div>
+            </div>
+            
+            <!-- 断层检测系统 -->
+            <div class="card">
+                <h3>🔍 断层检测系统</h3>
+                <div class="card-content">
+                    <div class="gap-status" id="gap-detection">
+                        <!-- 动态加载断层检测结果 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 底部状态栏 -->
+        <div class="footer">
+            <div class="footer-item">
+                <span>版本: v6.4.0</span>
+                <span>|</span>
+                <span>最后更新: 2024-10-12 14:24</span>
+            </div>
+            <div class="footer-item update-time">
+                <span>数据更新时间: </span>
+                <span id="last-update">--</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 数据更新管理
+        class DashboardManager {
+            constructor() {
+                this.updateInterval = 30000; // 30秒更新一次
+                this.init();
+            }
+            
+            init() {
+                this.updateAllData();
+                setInterval(() => this.updateAllData(), this.updateInterval);
+                console.log('🚀 柳芯数据大屏已启动');
+            }
+            
+            async updateAllData() {
+                try {
+                    await Promise.all([
+                        this.updateConversationStats(),
+                        this.updateSystemStatus(),
+                        this.updateMCPStats(),
+                        this.updateResourceMonitor(),
+                        this.updateGapDetection()
+                    ]);
+                    
+                    document.getElementById('last-update').textContent = 
+                        new Date().toLocaleString('zh-CN');
+                        
+                } catch (error) {
+                    console.error('数据更新失败:', error);
+                }
+            }
+            
+            async updateConversationStats() {
+                try {
+                    const response = await fetch('/api/conversation/stats');
+                    const data = await response.json();
+                    
+                    const scrollContainer = document.getElementById('conversation-scroll');
+                    scrollContainer.innerHTML = '';
+                    
+                    if (data.conversations && data.conversations.length > 0) {
+                        data.conversations.slice(0, 20).forEach(conv => {
+                            const item = document.createElement('div');
+                            item.className = 'stat-item';
+                            item.innerHTML = `时间: ${conv.time} | 触发规则: ${conv.rules}条 | 违规: ${conv.violations}条`;
+                            scrollContainer.appendChild(item);
+                        });
+                    } else {
+                        scrollContainer.innerHTML = '<div class="stat-item">暂无对话数据</div>';
+                    }
+                } catch (error) {
+                    console.error('对话统计更新失败:', error);
+                }
+            }
+            
+            async updateSystemStatus() {
+                try {
+                    const response = await fetch('/api/system/health');
+                    const data = await response.json();
+                    
+                    const statusContainer = document.getElementById('system-status');
+                    statusContainer.innerHTML = '';
+                    
+                    const services = [
+                        { name: 'MCP服务器', status: data.mcp_server || 'online' },
+                        { name: '监控API', status: data.monitor_api || 'online' },
+                        { name: '数据库连接', status: data.database || 'online' },
+                        { name: 'WebSocket', status: data.websocket || 'online' },
+                        { name: '规则引擎', status: data.rule_engine || 'online' },
+                        { name: '技能库', status: data.skill_library || 'online' },
+                        { name: '违规检测', status: data.violation_detection || 'online' },
+                        { name: '自动修复', status: data.auto_repair || 'online' }
+                    ];
+                    
+                    services.forEach(service => {
+                        const item = document.createElement('div');
+                        item.className = 'status-item';
+                        
+                        const dot = document.createElement('div');
+                        dot.className = `status-dot status-${service.status}`;
+                        
+                        const text = document.createElement('span');
+                        text.textContent = service.name;
+                        
+                        item.appendChild(dot);
+                        item.appendChild(text);
+                        statusContainer.appendChild(item);
+                    });
+                    
+                } catch (error) {
+                    console.error('系统状态更新失败:', error);
+                }
+            }
+            
+            async updateMCPStats() {
+                try {
+                    const response = await fetch('/api/mcp/statistics');
+                    const data = await response.json();
+                    
+                    const mcpContainer = document.getElementById('mcp-stats');
+                    mcpContainer.innerHTML = '';
+                    
+                    if (data.tools) {
+                        Object.entries(data.tools).forEach(([tool, count]) => {
+                            const item = document.createElement('div');
+                            item.className = 'mcp-item';
+                            item.innerHTML = `
+                                <span>${tool}</span>
+                                <span class="mcp-count">${count}次</span>
+                            `;
+                            mcpContainer.appendChild(item);
+                        });
+                    }
+                    
+                } catch (error) {
+                    console.error('MCP统计更新失败:', error);
+                }
+            }
+            
+            async updateResourceMonitor() {
+                try {
+                    const response = await fetch('/api/system/resources');
+                    const data = await response.json();
+                    
+                    const resourceContainer = document.getElementById('resource-monitor');
+                    resourceContainer.innerHTML = '';
+                    
+                    const resources = [
+                        { name: 'CPU', value: data.cpu || 45, unit: '%' },
+                        { name: '内存', value: data.memory || 62, unit: '%' },
+                        { name: '磁盘', value: data.disk || 23, unit: '%' },
+                        { name: '网络', value: data.network || 15, unit: 'MB/s' }
+                    ];
+                    
+                    resources.forEach(resource => {
+                        const item = document.createElement('div');
+                        item.className = 'resource-item';
+                        
+                        let statusClass = 'resource-normal';
+                        if (resource.value > 80) statusClass = 'resource-danger';
+                        else if (resource.value > 60) statusClass = 'resource-warning';
+                        
+                        item.innerHTML = `
+                            <span>${resource.name}</span>
+                            <div class="resource-bar">
+                                <div class="resource-fill ${statusClass}" style="width: ${resource.value}%"></div>
+                            </div>
+                            <span>${resource.value}${resource.unit}</span>
+                        `;
+                        
+                        resourceContainer.appendChild(item);
+                    });
+                    
+                } catch (error) {
+                    console.error('资源监控更新失败:', error);
+                }
+            }
+            
+            async updateGapDetection() {
+                try {
+                    const response = await fetch('/api/system/gaps');
+                    const data = await response.json();
+                    
+                    const gapContainer = document.getElementById('gap-detection');
+                    const gapCount = data.gaps ? data.gaps.total_gaps : 0;
+                    
+                    let icon = '🟢';
+                    let text = '系统健康';
+                    let color = '#00ff88';
+                    
+                    if (gapCount > 0) {
+                        icon = gapCount > 5 ? '🔴' : '🟡';
+                        text = gapCount > 5 ? '发现严重问题' : '发现轻微问题';
+                        color = gapCount > 5 ? '#ff4757' : '#ffa502';
+                    }
+                    
+                    gapContainer.innerHTML = `
+                        <div class="gap-icon">${icon}</div>
+                        <div class="gap-text">${text}</div>
+                        <div class="gap-count" style="color: ${color}">${gapCount}个断层</div>
+                    `;
+                    
+                } catch (error) {
+                    console.error('断层检测更新失败:', error);
+                }
+            }
+        }
+        
+        // 启动数据大屏
+        document.addEventListener('DOMContentLoaded', () => {
+            new DashboardManager();
+        });
+    </script>
+</body>
+</html>

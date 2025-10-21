@@ -1,0 +1,34 @@
+# Node.js
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# 日志文件
+*.log
+logs/
+
+# 数据库文件（太大）
+*.db
+*.db-shm
+*.db-wal
+
+# 备份文件
+backups/
+archives/
+*.tar.gz
+*.zip
+
+# 临时文件
+tmp/
+temp/
+.tmp/
+
+# 敏感文件
+.env
+*.key
+*.pem
+*.ppk
+
+# 系统文件
+.DS_Store
+Thumbs.db

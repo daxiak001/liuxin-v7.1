@@ -1,0 +1,33 @@
+{
+  "name": "liuxin-global-monitoring",
+  "version": "1.0.0",
+  "description": "柳芯云端全局监控系统 - 监控所有用户的使用情况",
+  "main": "server/global-monitor-server.js",
+  "scripts": {
+    "start": "node server/global-monitor-server.js",
+    "dev": "nodemon server/global-monitor-server.js",
+    "pm2": "pm2 start server/global-monitor-server.js --name liuxin-monitor"
+  },
+  "keywords": [
+    "monitoring",
+    "dashboard",
+    "websocket",
+    "analytics"
+  ],
+  "author": "柳芯系统团队",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2",
+    "node-fetch": "^2.7.0",
+    "scp": "^0.0.3",
+    "sqlite3": "^5.1.7",
+    "ssh2": "^1.17.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

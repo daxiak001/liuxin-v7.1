@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>柳芯云端监控控制台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --white: #FFFFFF;
+            --bg: #FAFAFA;
+            --border: #E5E5E5;
+            --border-light: #F0F0F0;
+            --text: #333333;
+            --text-secondary: #888888;
+            --blue: #1890FF;
+            --blue-light: #E6F7FF;
+            --green: #52C41A;
+            --red: #FF4D4F;
+            --orange: #FA8C16;
+            --gray: #F5F5F5;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: var(--white);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            font-size: 12px;
+            line-height: 1.3;
+            min-width: 1400px;
+        }
+        
+        /* 顶部状态栏 - 横向KPI */
+        .top-bar {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 60px;
+        }
+        
+        .logo {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--blue);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .kpi-bar {
+            display: flex;
+            gap: 32px;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .kpi-mini {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .kpi-mini-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .kpi-mini-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+        
+        .status-info {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 16px;
+        }
+        
+        .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* 主容器 - 三栏横向布局 */
+        .main-container {
+            display: grid;
+            grid-template-columns: 30% 40% 30%;
+            height: calc(100vh - 60px);
+            gap: 0;
+        }
+        
+        .column {
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 8px;
+        }
+        
+        .column:last-child {
+            border-right: none;
+        }
+        
+        /* 面板 */
+        .panel {
+            background: var(--white);
+            border: 1px solid var(--border-light);
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        
+        .panel-header {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-body {
+            padding: 8px 12px;
+        }
+        
+        /* 活动流 - 超紧凑 */
+        .activity-item {
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+            text-align: center;
+            line-height: 16px;
+            font-size: 10px;
+        }
+        
+        .activity-success .activity-icon { background: #F6FFED; color: var(--green); }
+        .activity-warning .activity-icon { background: #FFFBE6; color: var(--orange); }
+        .activity-danger .activity-icon { background: #FFF1F0; color: var(--red); }
+        
+        .activity-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        /* 用户分布 */
+        .user-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+        
+        .user-cell {
+            background: var(--gray);
+            padding: 8px;
+            text-align: center;
+            border-radius: 3px;
+        }
+        
+        .user-cell-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--blue);
+        }
+        
+        .user-cell-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        /* 技能排行 - 紧凑列表 */
+        .skill-item {
+            display: grid;
+            grid-template-columns: 30px 1fr 60px;
+            gap: 8px;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-light);
+            align-items: center;
+            font-size: 12px;
+        }
+        
+        .skill-item:last-child {
+            border-bottom: none;
+        }
+        
+        .skill-rank {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--blue);
+            text-align: center;
+        }
+        
+        .skill-name {
+            font-size: 12px;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .skill-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        .skill-count {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--orange);
+            text-align: right;
+        }
+        
+        /* 趋势图 */
+        .chart-box {
+            height: 180px;
+            position: relative;
+        }
+        
+        #trendChart {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* 违规热点 */
+        .violation-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 12px;
+        }
+        
+        .violation-item:last-child {
+            border-bottom: none;
+        }
+        
+        .violation-id {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .violation-stats {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        
+        .violation-rate {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--red);
+        }
+        
+        /* 规则分析 */
+        .rule-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 12px;
+        }
+        
+        .rule-row:last-child {
+            border-bottom: none;
+        }
+        
+        .rule-label {
+            color: var(--text-secondary);
+        }
+        
+        .rule-value {
+            font-weight: 700;
+        }
+        
+        .rule-value.success { color: var(--green); }
+        .rule-value.warning { color: var(--orange); }
+        .rule-value.danger { color: var(--red); }
+        
+        /* 建议框 */
+        .suggestion-box {
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--blue-light);
+            border-left: 3px solid var(--blue);
+            border-radius: 3px;
+        }
+        
+        .suggestion-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--blue);
+            margin-bottom: 4px;
+        }
+        
+        .suggestion-text {
+            font-size: 11px;
+            color: var(--text);
+            line-height: 1.5;
+        }
+        
+        /* 滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #CCCCCC;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #AAAAAA;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部状态栏 -->
+    <div class="top-bar">
+        <div class="logo">⚡ 柳芯云端监控控制台</div>
+        
+        <div class="kpi-bar">
+            <div class="kpi-mini">
+                <div class="kpi-mini-label">执行率</div>
+                <div class="kpi-mini-value" id="exec-rate">--</div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-label">违规率</div>
+                <div class="kpi-mini-value" id="viol-rate" style="color: var(--red);">--</div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-label">技能触发</div>
+                <div class="kpi-mini-value" id="skill-count" style="color: var(--orange);">--</div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-label">在线用户</div>
+                <div class="kpi-mini-value" id="online-users" style="color: var(--green);">--</div>
+            </div>
+        </div>
+        
+        <div class="status-info">
+            <span><span class="status-dot"></span>实时监控</span>
+            <span>🌐 43.142.176.53:8890</span>
+            <span id="update-time">--:--:--</span>
+        </div>
+    </div>
+
+    <!-- 主容器 - 三栏布局 -->
+    <div class="main-container">
+        <!-- 左栏 (30%) -->
+        <div class="column">
+            <!-- 实时活动流 -->
+            <div class="panel">
+                <div class="panel-header">⚡ 实时活动流</div>
+                <div class="panel-body" style="max-height: 350px; overflow-y: auto;">
+                    <div id="activity-stream"></div>
+                </div>
+            </div>
+            
+            <!-- 用户分布 -->
+            <div class="panel">
+                <div class="panel-header">👥 用户分布</div>
+                <div class="panel-body">
+                    <div class="user-grid">
+                        <div class="user-cell">
+                            <div class="user-cell-value">127</div>
+                            <div class="user-cell-label">总用户</div>
+                        </div>
+                        <div class="user-cell">
+                            <div class="user-cell-value">15</div>
+                            <div class="user-cell-label">活跃</div>
+                        </div>
+                        <div class="user-cell">
+                            <div class="user-cell-value">89</div>
+                            <div class="user-cell-label">高级</div>
+                        </div>
+                        <div class="user-cell">
+                            <div class="user-cell-value">23</div>
+                            <div class="user-cell-label">新手</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 规则分析 -->
+            <div class="panel">
+                <div class="panel-header">📋 规则分析</div>
+                <div class="panel-body">
+                    <div class="rule-row">
+                        <span class="rule-label">触发1条规则</span>
+                        <span class="rule-value success">违规率 2.1%</span>
+                    </div>
+                    <div class="rule-row">
+                        <span class="rule-label">触发2-5条规则</span>
+                        <span class="rule-value warning">违规率 8.5%</span>
+                    </div>
+                    <div class="rule-row">
+                        <span class="rule-label">触发6-10条规则</span>
+                        <span class="rule-value danger">违规率 15.3%</span>
+                    </div>
+                    <div class="rule-row">
+                        <span class="rule-label">触发>10条规则</span>
+                        <span class="rule-value danger">违规率 28.7%</span>
+                    </div>
+                    <div class="suggestion-box">
+                        <div class="suggestion-title">💡 AI建议</div>
+                        <div class="suggestion-text">
+                            建议触发上限：<strong style="color: var(--green);">≤5条</strong><br>
+                            高权重规则优先触发
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 中栏 (40%) -->
+        <div class="column">
+            <!-- 技能排行 -->
+            <div class="panel">
+                <div class="panel-header">🏆 技能排行</div>
+                <div class="panel-body" style="max-height: 350px; overflow-y: auto;">
+                    <div id="skill-ranking"></div>
+                </div>
+            </div>
+            
+            <!-- 趋势图 -->
+            <div class="panel">
+                <div class="panel-header">📈 执行率趋势（30天）</div>
+                <div class="panel-body">
+                    <div class="chart-box">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 右栏 (30%) -->
+        <div class="column">
+            <!-- 违规热点 -->
+            <div class="panel">
+                <div class="panel-header">⚠️ 违规热点</div>
+                <div class="panel-body" style="max-height: 500px; overflow-y: auto;">
+                    <div id="violation-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://43.142.176.53:8890/api';
+        
+        // 获取全局统计
+        async function fetchGlobalStats() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/global`);
+                const data = await res.json();
+                
+                document.getElementById('exec-rate').textContent = data.global_execution_rate + '%';
+                document.getElementById('viol-rate').textContent = data.global_violation_rate + '%';
+                document.getElementById('skill-count').textContent = data.total_skill_triggers;
+                document.getElementById('online-users').textContent = data.active_users_today;
+                
+                updateTime();
+            } catch (err) {
+                console.error('获取统计失败:', err);
+            }
+        }
+        
+        // 获取技能排行
+        async function fetchSkillRanking() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/skill-ranking`);
+                const data = await res.json();
+                
+                const html = data.map((skill, idx) => `
+                    <div class="skill-item">
+                        <div class="skill-rank">#${idx + 1}</div>
+                        <div>
+                            <div class="skill-name">${skill.skill_id} ${skill.skill_name}</div>
+                            <div class="skill-meta">${skill.users}人 · ${skill.success_rate?.toFixed(1)}%成功率</div>
+                        </div>
+                        <div class="skill-count">${skill.triggers}</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('skill-ranking').innerHTML = html;
+            } catch (err) {
+                console.error('获取技能排行失败:', err);
+            }
+        }
+        
+        // 获取违规热点
+        async function fetchViolations() {
+            try {
+                const res = await fetch(`${API_BASE}/stats/violation-hotspots`);
+                const data = await res.json();
+                
+                const html = data.map(v => `
+                    <div class="violation-item">
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="violation-id">${v.rule_id} ${v.rule_name}</div>
+                            <div class="violation-stats">${v.total_attempts}次 · ${v.affected_users}人</div>
+                        </div>
+                        <div class="violation-rate">${v.prevention_rate?.toFixed(1)}%</div>
+                    </div>
+                `).join('');
+                
+                document.getElementById('violation-list').innerHTML = html;
+            } catch (err) {
+                console.error('获取违规热点失败:', err);
+            }
+        }
+        
+        // 绘制趋势图
+        function drawTrendChart() {
+            const canvas = document.getElementById('trendChart');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const data = Array.from({length: 30}, () => Math.random() * 30 + 70);
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min || 1;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格
+            ctx.strokeStyle = '#F0F0F0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = (canvas.height / 5) * i;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // 绘制填充区域
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, 'rgba(24, 144, 255, 0.15)');
+            gradient.addColorStop(1, 'rgba(24, 144, 255, 0.01)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            data.forEach((val, idx) => {
+                const x = (canvas.width / (data.length - 1)) * idx;
+                const y = canvas.height - ((val - min) / range) * (canvas.height - 10) - 5;
+                if (idx === 0) ctx.lineTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+            
+            // 绘制折线
+            ctx.strokeStyle = '#1890FF';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            data.forEach((val, idx) => {
+                const x = (canvas.width / (data.length - 1)) * idx;
+                const y = canvas.height - ((val - min) / range) * (canvas.height - 10) - 5;
+                
+                if (idx === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制点
+            data.forEach((val, idx) => {
+                const x = (canvas.width / (data.length - 1)) * idx;
+                const y = canvas.height - ((val - min) / range) * (canvas.height - 10) - 5;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#1890FF';
+                ctx.fill();
+            });
+        }
+        
+        // 模拟实时活动流
+        const activities = [
+            { type: 'success', icon: '✓', text: '用户_042 执行 SK-003 成功' },
+            { type: 'warning', icon: '⚠', text: 'IR-045 触发检查 - 已阻止' },
+            { type: 'success', icon: '✓', text: '用户_089 完成代码编辑' },
+            { type: 'danger', icon: '×', text: '用户_015 违反 IR-031' },
+            { type: 'success', icon: '✓', text: '灰度发布流程启动' },
+            { type: 'success', icon: '✓', text: '用户_123 触发 SK-007' },
+            { type: 'warning', icon: '⚠', text: 'IR-047 规则ID冲突检测' },
+            { type: 'success', icon: '✓', text: '用户_056 部署验证通过' },
+            { type: 'success', icon: '✓', text: '用户_078 规则同步成功' },
+            { type: 'warning', icon: '⚠', text: 'IR-051 验收前置检查' },
+            { type: 'success', icon: '✓', text: '用户_091 技能触发成功' },
+            { type: 'danger', icon: '×', text: '用户_033 违反 IR-052' }
+        ];
+        
+        let activityIndex = 0;
+        function addActivity() {
+            const activity = activities[activityIndex % activities.length];
+            const time = new Date().toLocaleTimeString('zh-CN');
+            
+            const item = document.createElement('div');
+            item.className = `activity-item activity-${activity.type}`;
+            item.innerHTML = `
+                <div>
+                    <span class="activity-icon">${activity.icon}</span>
+                    ${activity.text}
+                </div>
+                <div class="activity-time">${time}</div>
+            `;
+            
+            const stream = document.getElementById('activity-stream');
+            stream.insertBefore(item, stream.firstChild);
+            
+            // 限制最多20条
+            if (stream.children.length > 20) {
+                stream.removeChild(stream.lastChild);
+            }
+            
+            activityIndex++;
+        }
+        
+        // 更新时间
+        function updateTime() {
+            const now = new Date().toLocaleTimeString('zh-CN');
+            document.getElementById('update-time').textContent = now;
+        }
+        
+        // 初始化
+        fetchGlobalStats();
+        fetchSkillRanking();
+        fetchViolations();
+        drawTrendChart();
+        
+        // 初始填充活动流
+        for (let i = 0; i < 10; i++) {
+            addActivity();
+        }
+        
+        // 定时刷新
+        setInterval(fetchGlobalStats, 5000);
+        setInterval(fetchSkillRanking, 10000);
+        setInterval(fetchViolations, 10000);
+        setInterval(drawTrendChart, 3000);
+        setInterval(addActivity, 2000);
+        
+        // 窗口大小改变时重绘图表
+        window.addEventListener('resize', drawTrendChart);
+    </script>
+</body>
+</html>
+

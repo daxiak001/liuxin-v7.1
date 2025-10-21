@@ -546,7 +546,7 @@ class LiuXinMCPServer {
             const cloudHealth = await this.cloudClient.get('/health');
             const status = {
                 server: 'LiuXin MCP Server',
-                version: '2.1.0',
+                version: '7.1',
                 cloud_status: cloudHealth.data.status || 'unknown',
                 cloud_url: CLOUD_API_URL,
                 timestamp: new Date().toISOString(),
@@ -916,7 +916,7 @@ ${ruleRequirements}
             metadata: {
                 assigned_role: roleAnalysis.role,
                 classification: classification,
-                version: 'v5.2.0'
+                version: 'v7.1'
             }
         };
     }
@@ -945,7 +945,7 @@ ${ruleRequirements}
             metadata: {
                 assigned_role: assignedRole,
                 enforced: true,
-                version: 'v5.2.0'
+                version: 'v7.1'
             }
         };
     }
@@ -1448,7 +1448,7 @@ ${ruleRequirements}
 
         // 系统状态统计
         const systemStats = {
-            system_version: 'v6.0',
+            system_version: 'v7.1',
             total_rules: 7, // CLOUD-FORCE-RULES-001到007
             total_tools: 22, // 包括新增的3个版本管理工具
             team_roles: 5,
@@ -2275,7 +2275,7 @@ ${ruleRequirements}
             changes: changes,
             action: 'Ctrl+Shift+P → Developer: Reload Window',
             timestamp: new Date().toISOString(),
-            version: '7.0'
+            version: '7.1'
         };
 
         fs.writeFileSync(

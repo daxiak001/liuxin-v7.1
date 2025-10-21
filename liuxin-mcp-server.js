@@ -158,6 +158,57 @@ class LiuXinMCPServer {
                         },
                     },
                     {
+                        name: 'liuxin_smart_preloader',
+                        description: '🎯 团队模式智能预加载器 - 根据用户输入自动分配角色（v5.2.0强制团队模式）',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                user_input: {
+                                    type: 'string',
+                                    description: '用户输入内容',
+                                },
+                            },
+                            required: ['user_input'],
+                        },
+                    },
+                    {
+                        name: 'liuxin_command_interceptor',
+                        description: '⚠️ 命令执行拦截器 - 检查命令格式是否符合规范（CMD-FORMAT-CHECK-001）',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                command: {
+                                    type: 'string',
+                                    description: '要执行的命令',
+                                },
+                            },
+                            required: ['command'],
+                        },
+                    },
+                    {
+                        name: 'liuxin_code_change_interceptor',
+                        description: '🔒 代码修改范围拦截器 - 防止批量修改无关代码（CODE-SCOPE-001）',
+                        inputSchema: {
+                            type: 'object',
+                            properties: {
+                                current_task: {
+                                    type: 'string',
+                                    description: '当前任务描述',
+                                },
+                                files_to_change: {
+                                    type: 'array',
+                                    items: { type: 'string' },
+                                    description: '计划修改的文件列表',
+                                },
+                                change_reason: {
+                                    type: 'string',
+                                    description: '修改原因',
+                                },
+                            },
+                            required: ['current_task', 'files_to_change', 'change_reason'],
+                        },
+                    },
+                    {
                         name: 'liuxin_requirement_rules',
                         description: '需求分析规则触发器 - 加载4条需求相关规则',
                         inputSchema: {
@@ -436,6 +487,12 @@ class LiuXinMCPServer {
                         return await this.handleTeamEnforcer(args);
                     case 'liuxin_cloud_force_rules':
                         return await this.handleCloudForceRules(args);
+
+                    // v7.1新增拦截器工具
+                    case 'liuxin_command_interceptor':
+                        return await this.handleCommandInterceptor(args);
+                    case 'liuxin_code_change_interceptor':
+                        return await this.handleCodeChangeInterceptor(args);
 
                     // CLOUD-FORCE-RULES-004新增项目管理工具
                     case 'liuxin_project_file_checker':
@@ -2156,6 +2213,65 @@ ${ruleRequirements}
                     type: 'text',
                     text: JSON.stringify({
                         success: false,
+                        error: error.message
+                    }, null, 2)
+                }]
+            };
+        }
+    }
+
+    // v7.1新增拦截器方法
+    async handleCommandInterceptor(args) {
+        const { command } = args;
+
+        try {
+            const response = await this.cloudClient.post('/api/interceptor/command', { command });
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify(response.data, null, 2)
+                }],
+                metadata: response.data
+            };
+        } catch (error) {
+            console.error('[柳芯MCP] 命令拦截器错误:', error.message);
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: false,
+                        blocked: false,
+                        error: error.message
+                    }, null, 2)
+                }]
+            };
+        }
+    }
+
+    async handleCodeChangeInterceptor(args) {
+        const { current_task, files_to_change, change_reason } = args;
+
+        try {
+            const response = await this.cloudClient.post('/api/interceptor/code', {
+                current_task,
+                files_to_change,
+                change_reason
+            });
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify(response.data, null, 2)
+                }],
+                metadata: response.data
+            };
+        } catch (error) {
+            console.error('[柳芯MCP] 代码修改拦截器错误:', error.message);
+            return {
+                content: [{
+                    type: 'text',
+                    text: JSON.stringify({
+                        success: false,
+                        blocked: false,
                         error: error.message
                     }, null, 2)
                 }]

@@ -5,7 +5,7 @@
 
 set -e
 
-REPO_URL="git@github.com-liuxin:daxiak001/liuxin-v7.1.git"
+REPO_URL="git@github.com:daxiak001/liuxin-v7.1.git"
 REPO_DIR="/home/ubuntu/liuxin-v7.1"
 SOURCE_DIR="/home/ubuntu/liuxin-system"
 LOG_FILE="/home/ubuntu/liuxin-system/logs/github-sync.log"

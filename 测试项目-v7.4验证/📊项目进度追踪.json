@@ -1,0 +1,102 @@
+{
+    "document_type": "项目进度追踪",
+    "version": "1.0.0",
+    "last_updated": "2025-10-24T08:00:00Z",
+    "project_name": "测试项目-v7.4验证",
+    "overall_progress": {
+        "percentage": "100%",
+        "status": "完成",
+        "start_date": "2025-10-24",
+        "target_completion": "2025-10-25",
+        "estimated_completion": "2025-10-25",
+        "current_phase": "已完成"
+    },
+    "milestones": {
+        "description": "项目关键里程碑",
+        "list": [
+            {
+                "milestone_id": "M-001",
+                "milestone_name": "用户登录功能完成",
+                "target_date": "2025-10-24",
+                "status": "已完成",
+                "completion_date": "2025-10-24",
+                "deliverables": [
+                    "登录表单页面",
+                    "验证逻辑实现",
+                    "功能测试通过"
+                ],
+                "dependencies": [],
+                "notes": "v7.4测试的第一个里程碑"
+            },
+            {
+                "milestone_id": "M-002",
+                "milestone_name": "数据导出功能完成",
+                "target_date": "2025-10-24",
+                "status": "已完成",
+                "completion_date": "2025-10-24",
+                "deliverables": [
+                    "导出页面实现",
+                    "CSV导出功能",
+                    "JSON导出功能",
+                    "导出统计功能"
+                ],
+                "dependencies": [
+                    "M-001"
+                ],
+                "notes": "复用登录模块函数，避免重复开发"
+            }
+        ]
+    },
+    "weekly_progress": {
+        "description": "每周进度记录",
+        "weeks": [
+            {
+                "week_id": "W-001",
+                "week_range": "2025-10-20至2025-10-26",
+                "completed_tasks": [
+                    "用户登录功能开发完成",
+                    "数据导出功能开发完成"
+                ],
+                "in_progress_tasks": [],
+                "next_week_plan": [],
+                "blockers": [],
+                "notes": "项目启动周"
+            }
+        ]
+    },
+    "todo_list": {
+        "description": "待办事项清单",
+        "items": [
+            {
+                "todo_id": "TODO-001",
+                "task": "实现登录表单页面",
+                "priority": "high",
+                "status": "pending",
+                "assigned_to": "开发工程师-小柳",
+                "due_date": "2025-10-24",
+                "created_date": "2025-10-24",
+                "notes": ""
+            },
+            {
+                "todo_id": "TODO-002",
+                "task": "实现验证逻辑",
+                "priority": "high",
+                "status": "pending",
+                "assigned_to": "开发工程师-小柳",
+                "due_date": "2025-10-24",
+                "created_date": "2025-10-24",
+                "notes": ""
+            }
+        ]
+    },
+    "ai_instructions": {
+        "before_development": "开发前查看当前进度和待办事项，了解下一步工作",
+        "after_task": "完成任务后更新进度，标记任务为completed",
+        "daily_update": "每天结束时更新当天完成的工作和遇到的问题"
+    },
+    "metadata": {
+        "created_by": "柳芯系统-产品经理-小品",
+        "template_version": "1.0.0",
+        "purpose": "实时追踪项目进度，确保项目按计划推进"
+    }
+}

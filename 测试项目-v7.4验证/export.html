@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据导出 - v7.4测试项目</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .export-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .data-table {
+            margin-bottom: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background: #f0f0f0;
+        }
+
+        .export-options {
+            margin-bottom: 25px;
+        }
+
+        .export-options h3 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .format-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-export {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-export:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-export:active {
+            transform: translateY(0);
+        }
+
+        .success-message,
+        .error-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .nav-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .nav-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .nav-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="export-container">
+        <div class="header">
+            <h1>📊 数据导出</h1>
+            <p>v7.4测试项目 - 柳芯系统</p>
+        </div>
+
+        <div id="successMessage" class="success-message"></div>
+        <div id="errorMessage" class="error-message"></div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="value" id="totalRecords">5</div>
+                <div class="label">总记录数</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="exportCount">0</div>
+                <div class="label">导出次数</div>
+            </div>
+            <div class="stat-card">
+                <div class="value" id="lastExportTime">未导出</div>
+                <div class="label">最后导出</div>
+            </div>
+        </div>
+
+        <div class="data-table">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>用户名</th>
+                        <th>角色</th>
+                        <th>状态</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>admin</td>
+                        <td>管理员</td>
+                        <td>激活</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>test</td>
+                        <td>测试用户</td>
+                        <td>激活</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>liuxin</td>
+                        <td>开发者</td>
+                        <td>激活</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>guest</td>
+                        <td>访客</td>
+                        <td>暂停</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>demo</td>
+                        <td>演示用户</td>
+                        <td>激活</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="export-options">
+            <h3>选择导出格式</h3>
+            <div class="format-buttons">
+                <button class="btn-export" onclick="exportData('csv')">
+                    📄 导出为 CSV
+                </button>
+                <button class="btn-export" onclick="exportData('json')">
+                    📋 导出为 JSON
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-link">
+            <a href="login.html">← 返回登录页</a>
+        </div>
+    </div>
+
+    <!-- 复用login.js中的showError和showSuccess函数 -->
+    <script src="login.js"></script>
+    <script src="export.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,30 @@
+{
+  "task": {
+    "description": "测试拦截器",
+    "targetFiles": [],
+    "timestamp": "2025-10-31T17:20:19.318Z"
+  },
+  "totalModifications": 2,
+  "modifiedFiles": [
+    {
+      "file": "test-file.js",
+      "fullPath": "test-file.js",
+      "modificationCount": 1
+    },
+    {
+      "file": "other-file.js",
+      "fullPath": "other-file.js",
+      "modificationCount": 1
+    }
+  ],
+  "violations": [
+    {
+      "file": "other-file.js",
+      "operation": "write",
+      "timestamp": "2025-10-31T17:20:19.318Z",
+      "task": "测试拦截器"
+    }
+  ],
+  "hasViolations": true,
+  "timestamp": "2025-10-31T17:20:19.319Z"
+}

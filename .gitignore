@@ -1,0 +1,57 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 数据库文件（太大，不适合版本控制）
+*.db
+*.db-shm
+*.db-wal
+# 但保留数据库文件在本地备份中
+
+# 日志文件
+*.log
+logs/
+mcp-server-debug.log
+
+# 备份目录
+备份-*/
+archives/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# 环境变量
+.env
+.env.local
+
+# IDE配置
+.vscode/
+.idea/
+*.iml
+
+# 测试文件
+test-*.js
+*.test.js
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# 标志文件
+*.flag
+
+# 统计模块锁定文件
+统计模块锁定.flag
+
+# 其他
+.cache/
+tmp/
+temp/

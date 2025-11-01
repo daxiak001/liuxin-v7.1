@@ -1,0 +1,176 @@
+{
+    "document_type": "功能模块清单",
+    "version": "1.0.0",
+    "last_updated": "2025-10-24T08:00:00Z",
+    "project_name": "测试项目-v7.4验证",
+    "completed_modules": {
+        "description": "已完成的功能模块列表",
+        "total_count": 2,
+        "modules": [
+            {
+                "module_id": "M-001",
+                "module_name": "用户登录模块",
+                "module_path": "./",
+                "files": [
+                    "login.html",
+                    "login.js"
+                ],
+                "description": "用户登录功能，包含登录表单和验证逻辑",
+                "completed_date": "2025-10-24",
+                "version": "1.0.0",
+                "dependencies": [],
+                "status": "completed"
+            },
+            {
+                "module_id": "M-002",
+                "module_name": "数据导出模块",
+                "module_path": "./",
+                "files": [
+                    "export.html",
+                    "export.js"
+                ],
+                "description": "数据导出功能，支持CSV和JSON格式导出",
+                "completed_date": "2025-10-24",
+                "version": "1.0.0",
+                "dependencies": [
+                    "M-001"
+                ],
+                "status": "completed",
+                "notes": "复用了M-001中的showError和showSuccess函数"
+            }
+        ]
+    },
+    "function_index": {
+        "description": "函数索引（避免重复造轮子）",
+        "total_count": 9,
+        "functions": [
+            {
+                "function_id": "FUNC-001",
+                "function_name": "showError",
+                "file": "login.js",
+                "description": "显示错误消息",
+                "parameters": [
+                    "message"
+                ],
+                "return_type": "void",
+                "usage_example": "showError('错误消息')"
+            },
+            {
+                "function_id": "FUNC-002",
+                "function_name": "showSuccess",
+                "file": "login.js",
+                "description": "显示成功消息",
+                "parameters": [
+                    "message"
+                ],
+                "return_type": "void",
+                "usage_example": "showSuccess('成功消息')"
+            },
+            {
+                "function_id": "FUNC-003",
+                "function_name": "validateCredentials",
+                "file": "login.js",
+                "description": "验证用户凭证",
+                "parameters": [
+                    "username",
+                    "password"
+                ],
+                "return_type": "Object|null",
+                "usage_example": "const user = validateCredentials('admin', 'admin123')"
+            },
+            {
+                "function_id": "FUNC-004",
+                "function_name": "saveSession",
+                "file": "login.js",
+                "description": "保存登录会话",
+                "parameters": [
+                    "user",
+                    "remember"
+                ],
+                "return_type": "void",
+                "usage_example": "saveSession(user, true)"
+            },
+            {
+                "function_id": "FUNC-005",
+                "function_name": "getTableData",
+                "file": "export.js",
+                "description": "从表格获取数据",
+                "parameters": [],
+                "return_type": "Object",
+                "usage_example": "const {headers, data} = getTableData()"
+            },
+            {
+                "function_id": "FUNC-006",
+                "function_name": "exportToCSV",
+                "file": "export.js",
+                "description": "导出为CSV格式",
+                "parameters": [
+                    "headers",
+                    "data"
+                ],
+                "return_type": "string",
+                "usage_example": "const csv = exportToCSV(headers, data)"
+            },
+            {
+                "function_id": "FUNC-007",
+                "function_name": "exportToJSON",
+                "file": "export.js",
+                "description": "导出为JSON格式",
+                "parameters": [
+                    "data"
+                ],
+                "return_type": "string",
+                "usage_example": "const json = exportToJSON(data)"
+            },
+            {
+                "function_id": "FUNC-008",
+                "function_name": "downloadFile",
+                "file": "export.js",
+                "description": "下载文件",
+                "parameters": [
+                    "content",
+                    "filename",
+                    "mimeType"
+                ],
+                "return_type": "void",
+                "usage_example": "downloadFile(content, 'data.csv', 'text/csv')"
+            },
+            {
+                "function_id": "FUNC-009",
+                "function_name": "exportData",
+                "file": "export.js",
+                "description": "主导出函数（支持csv和json）",
+                "parameters": [
+                    "format"
+                ],
+                "return_type": "void",
+                "usage_example": "exportData('csv')"
+            }
+        ]
+    },
+    "module_dependencies": {
+        "description": "模块依赖关系",
+        "dependencies": [
+            {
+                "from_module": "M-002",
+                "to_module": "M-001",
+                "dependency_type": "函数复用",
+                "description": "数据导出模块复用登录模块的showError和showSuccess函数"
+            }
+        ]
+    },
+    "reusable_components": {
+        "description": "可复用组件库",
+        "components": []
+    },
+    "ai_instructions": {
+        "before_development": "开发前必须检查此文件，避免重复开发已有功能",
+        "after_development": "完成功能后必须更新此文件，记录新功能和函数",
+        "search_before_create": "创建新函数前先搜索此文件，可能已有类似功能"
+    },
+    "metadata": {
+        "created_by": "柳芯系统-开发工程师-小柳",
+        "template_version": "1.0.0",
+        "purpose": "记录所有已完成功能，避免重复造轮子"
+    }
+}

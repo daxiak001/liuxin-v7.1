@@ -1,0 +1,107 @@
+{
+    "document_type": "测试集成记录",
+    "version": "1.0.0",
+    "last_updated": "2025-10-24T08:00:00Z",
+    "project_name": "测试项目-v7.4验证",
+    "test_status": {
+        "description": "测试状态概览",
+        "total_tests": 0,
+        "passed": 0,
+        "failed": 0,
+        "pending": 0,
+        "test_coverage": "0%",
+        "last_test_date": null
+    },
+    "test_cases": {
+        "description": "测试用例清单",
+        "total_count": 0,
+        "cases": []
+    },
+    "integration_status": {
+        "description": "功能集成状态",
+        "completed_features": [
+            {
+                "feature_id": "F-001",
+                "feature_name": "用户登录功能",
+                "module": "用户认证模块",
+                "files": [
+                    "login.html",
+                    "login.js"
+                ],
+                "integrated_date": "2025-10-24",
+                "test_status": "待测试",
+                "notes": "功能已完成，集成成功"
+            },
+            {
+                "feature_id": "F-002",
+                "feature_name": "数据导出功能",
+                "module": "数据导出模块",
+                "files": [
+                    "export.html",
+                    "export.js"
+                ],
+                "integrated_date": "2025-10-24",
+                "test_status": "待测试",
+                "notes": "功能已完成，复用了F-001的消息提示函数",
+                "dependencies": [
+                    "F-001"
+                ]
+            }
+        ],
+        "pending_integration": [],
+        "integration_issues": []
+    },
+    "known_issues": {
+        "description": "已知问题列表",
+        "total_count": 1,
+        "issues": [
+            {
+                "issue_id": "BUG-001",
+                "title": "导出CSV文件名中文乱码",
+                "description": "在某些系统中，导出的CSV文件名中的中文字符可能显示为乱码",
+                "severity": "medium",
+                "status": "resolved",
+                "affected_module": "M-002",
+                "affected_files": [
+                    "export.js"
+                ],
+                "reported_date": "2025-10-24",
+                "reported_by": "测试与质量经理-小观",
+                "resolved_date": "2025-10-24",
+                "resolved_by": "开发工程师-小柳",
+                "fix_description": "在downloadFile函数中使用encodeURIComponent对文件名进行编码",
+                "reproduce_steps": [
+                    "1. 打开export.html",
+                    "2. 点击导出为CSV",
+                    "3. 查看下载的文件名"
+                ],
+                "expected": "文件名正确显示中文",
+                "actual": "文件名中文显示为乱码或问号",
+                "notes": "需要对文件名进行URL编码处理 | 已修复：使用encodeURIComponent编码"
+            }
+        ]
+    },
+    "test_environments": {
+        "description": "测试环境配置",
+        "environments": [
+            {
+                "env_id": "ENV-001",
+                "env_name": "开发环境",
+                "status": "active",
+                "url": "localhost",
+                "notes": "本地开发测试环境"
+            }
+        ]
+    },
+    "ai_instructions": {
+        "before_testing": "测试前查看已知问题，避免重复报告",
+        "after_development": "功能完成后必须添加测试用例并执行测试",
+        "integration_check": "集成前确认所有功能都在completed_features中",
+        "bug_found": "发现Bug后立即记录到known_issues"
+    },
+    "metadata": {
+        "created_by": "柳芯系统-测试与质量经理-小观",
+        "template_version": "1.0.0",
+        "purpose": "记录测试状态和集成情况，确保功能不遗漏"
+    }
+}

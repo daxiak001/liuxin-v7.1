@@ -1,0 +1,118 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-10-31T14:02:40.860Z",
+  "features": {
+    "hot-reload": {
+      "name": "全局热重载",
+      "description": "监听代码文件变更，自动清除模块缓存，无需重启Cursor",
+      "use_case": "修改MCP服务器代码后，自动生效",
+      "how_to_use": "修改代码后自动触发，也可手动调用 HotReloadManager.manualReload()",
+      "related_files": [
+        "HotReloadManager.js",
+        "liuxin-mcp-server-unified.js"
+      ],
+      "importance": "CRITICAL",
+      "tags": [
+        "开发效率",
+        "自动化"
+      ],
+      "registered_at": "2025-10-31T14:02:40.858Z",
+      "usage_count": 0,
+      "last_used": null,
+      "status": "active"
+    },
+    "lock-config-hot-reload": {
+      "name": "锁配置热重载",
+      "description": "监听lock-config.json变更，自动重新加载配置",
+      "use_case": "修改模块锁定状态后立即生效",
+      "how_to_use": "修改lock-config.json文件即可，300ms防抖",
+      "related_files": [
+        "locks/LockManager.js",
+        "locks/lock-config.json"
+      ],
+      "importance": "HIGH",
+      "tags": [
+        "配置管理",
+        "自动化"
+      ],
+      "registered_at": "2025-10-31T14:02:40.859Z",
+      "usage_count": 0,
+      "last_used": null,
+      "status": "active"
+    },
+    "smart-preloader": {
+      "name": "团队模式智能预加载器",
+      "description": "根据用户输入自动分配AI角色，预加载相关数据",
+      "use_case": "每次对话开始时自动调用，分配合适的角色",
+      "how_to_use": "调用 liuxin_smart_preloader 工具",
+      "related_files": [
+        "v7.3-core-logic.js"
+      ],
+      "importance": "HIGH",
+      "tags": [
+        "AI角色",
+        "智能分配"
+      ],
+      "registered_at": "2025-10-31T14:02:40.859Z",
+      "usage_count": 0,
+      "last_used": null,
+      "status": "active"
+    },
+    "three-phase-interceptor": {
+      "name": "三阶段拦截器",
+      "description": "Pre/Mid/Post三阶段拦截工具调用，强制执行规则",
+      "use_case": "拦截所有MCP工具调用，检查是否违反规则",
+      "how_to_use": "自动在每次工具调用时执行",
+      "related_files": [
+        "liuxin-mcp-server-unified.js (ThreePhaseInterceptor类)"
+      ],
+      "importance": "CRITICAL",
+      "tags": [
+        "规则执行",
+        "拦截器"
+      ],
+      "registered_at": "2025-10-31T14:02:40.860Z",
+      "usage_count": 0,
+      "last_used": null,
+      "status": "active"
+    },
+    "response-interceptor": {
+      "name": "Response输出拦截器",
+      "description": "检查AI回复内容，自动添加模板（仅限liuxin_工具）",
+      "use_case": "确保AI回复符合规范，添加角色标识和统计信息",
+      "how_to_use": "自动在工具输出时执行（v7.11.0后仅限liuxin_工具）",
+      "related_files": [
+        "ResponseInterceptor.js",
+        "liuxin-mcp-server-unified.js"
+      ],
+      "importance": "HIGH",
+      "tags": [
+        "输出规范",
+        "模板注入"
+      ],
+      "notes": "v7.11.0: 已修复过度拦截问题，现在只拦截liuxin_工具",
+      "registered_at": "2025-10-31T14:02:40.860Z",
+      "usage_count": 0,
+      "last_used": null,
+      "status": "active"
+    },
+    "violation-detector": {
+      "name": "违规检测器v2.0",
+      "description": "基于正则引擎的违规检测，准确率100%",
+      "use_case": "检测AI回复是否违反规则",
+      "how_to_use": "调用 liuxin_violation_detector 工具",
+      "related_files": [
+        "mcp_tools/violation_detector.js"
+      ],
+      "importance": "HIGH",
+      "tags": [
+        "规则检测",
+        "违规检测"
+      ],
+      "registered_at": "2025-10-31T14:02:40.860Z",
+      "usage_count": 0,
+      "last_used": null,
+      "status": "active"
+    }
+  }
+}

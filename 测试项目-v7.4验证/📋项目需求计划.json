@@ -1,0 +1,85 @@
+{
+    "document_type": "项目需求计划",
+    "version": "1.0.0",
+    "last_updated": "2025-10-24T08:00:00Z",
+    "project_name": "测试项目-v7.4验证",
+    "requirements": {
+        "description": "项目需求清单",
+        "total_count": 2,
+        "items": [
+            {
+                "requirement_id": "REQ-001",
+                "requirement_name": "用户登录功能",
+                "description": "实现用户登录功能，包含登录表单和验证逻辑",
+                "priority": "high",
+                "status": "已完成",
+                "assigned_to": "开发工程师-小柳",
+                "estimated_hours": 8,
+                "actual_hours": 6,
+                "created_date": "2025-10-24",
+                "due_date": "2025-10-25",
+                "completed_date": "2025-10-24",
+                "dependencies": [],
+                "acceptance_criteria": [
+                    "用户可以输入用户名和密码",
+                    "系统验证用户凭证",
+                    "登录成功后跳转到主页",
+                    "登录失败显示错误提示"
+                ],
+                "notes": "测试v7.4功能的示例需求"
+            },
+            {
+                "requirement_id": "REQ-002",
+                "requirement_name": "数据导出功能",
+                "description": "实现数据导出功能，支持导出为CSV和JSON格式",
+                "priority": "high",
+                "status": "已完成",
+                "assigned_to": "开发工程师-小柳",
+                "estimated_hours": 6,
+                "actual_hours": 5,
+                "created_date": "2025-10-24",
+                "due_date": "2025-10-24",
+                "completed_date": "2025-10-24",
+                "dependencies": [
+                    "REQ-001"
+                ],
+                "acceptance_criteria": [
+                    "支持导出为CSV格式",
+                    "支持导出为JSON格式",
+                    "文件名包含时间戳",
+                    "导出成功显示提示消息",
+                    "统计导出次数"
+                ],
+                "notes": "复用登录模块的消息提示函数"
+            }
+        ]
+    },
+    "priority_levels": {
+        "critical": {
+            "description": "紧急且重要",
+            "count": 0
+        },
+        "high": {
+            "description": "重要",
+            "count": 1
+        },
+        "medium": {
+            "description": "一般",
+            "count": 0
+        },
+        "low": {
+            "description": "可选",
+            "count": 0
+        }
+    },
+    "ai_instructions": {
+        "before_development": "开发前查看需求优先级，优先开发high和critical级别需求",
+        "after_completion": "完成需求后更新status为completed，记录actual_hours",
+        "requirement_change": "需求变更时更新此文件并记录变更原因"
+    },
+    "metadata": {
+        "created_by": "柳芯系统-产品经理-小品",
+        "template_version": "1.0.0",
+        "purpose": "管理项目需求，明确优先级和验收标准"
+    }
+}
